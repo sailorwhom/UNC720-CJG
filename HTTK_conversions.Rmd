@@ -1,0 +1,117 @@
+---
+title: "HTTK conversions"
+author: "cgonzales"
+date: "2024-05-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(data.table)
+
+```
+
+## R Markdown
+
+```{r}
+df = read_csv("activities_with_inchikeys_to_filter_in_R_all.csv", show_col_types = FALSE)[1:20,]
+inchi_list = (df$standard_inchi_key)
+
+```
+
+
+Example inchi that works, 'CBVCZFGXHXORBI-PXQQMZJSSA-N'
+
+
+```{r}
+library(readr)
+df <- read_csv("activities_with_inchikeys_to_filter_in_R_all.csv") #full dataframe of 78104 records
+length(unique(df$standard_inchi_key)) #47348
+df <- df #only for subsetting
+
+inchi_list <- unique(data$standard_inchi_key)
+batches <- seq(from=1000,to=length(inchi_list), by = 1000)
+
+
+library(ctxR)
+# test <- chemical_equal_batch(word_list = inchi_list[1:999], verbose = TRUE) #returns empty data frame
+
+lookup = data.frame()
+for(i in batches){
+  lookup <- rbind(lookup,chemical_equal_batch(word_list = inchi_list[i:(i+999)]))
+  print(i)
+}
+lookup
+
+lookup |> filter(dtxsid != "")
+df
+
+# whole thing takes 18 min to run
+# scrap this method below
+# test2 = data.frame()
+# test2 <- rbind(test2,chemical_equal_batch(word_list = inchi_list[max(batches)+1:length(inchi_list)]))
+# test2
+
+# attach dtxsid to df, filter for those that did not return dtxsid, and send to wambaugh/tony to validate
+
+final <- left_join(df, lookup, by = (join_by(standard_inchi_key==searchValue) ))
+final2 <- final
+final2$searchMsgs <- NULL
+final2$suggestions <- NULL
+
+
+write.csv(final2, "activities_with_dsstoxids.csv", row.names = FALSE)
+```
+
+
+
+```{r}
+dataf <- read_csv("secondpass.csv") # this the current search through chembl
+length(unique(dataf$standard_inchi_key)) # 47,348
+
+length(unique(dataf$dtxsid)) # 2,414
+dataf |> filter(dtxsid != "") |> dim() # 9,514
+
+```
+
+Needs QA done on the units.
+
+```{r}
+
+
+final = dataf |> filter(dtxsid != "")  # 9,514
+
+#Clint, CLH, microsomal stability, actual clearance, CLH(app), ...
+
+final = final |> filter( final$standard_type == "CLH(app)"
+                         |final$standard_type == "Clint"
+                         |final$standard_type == "CLH"
+                         |final$standard_type == "microsomal stability"
+                         |final$standard_type == "actual clearance"
+                         |final$standard_type == "CL(app)"
+                         |final$standard_type == "CL"
+                           )
+final |> dim() # 4086
+
+# final = final |> filter( final$standard_units )
+
+final$standard_units |>  unique()
+
+final |> group_by(standard_units) |> n_distinct(final$standard_units)
+
+final |> filter ( final$standard_units == "uL/min")
+
+# standard units, or normal value?
+#uL.min-1.(10^6cells)-1
+# find distibution of the standard units
+```
+
+
+
+
+
+
