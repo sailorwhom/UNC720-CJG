@@ -13,6 +13,8 @@ library(dplyr)
 library(ggplot2)
 library(data.table)
 
+library(readr)
+library(ctxR)
 ```
 
 ## R Markdown
@@ -23,7 +25,8 @@ inchi_list = (df$standard_inchi_key)
 
 ```
 
-
+In this R markdown file, we search for DTXSIDs using the ctxR package.
+We leverage the InchiKey values which we obtained from the ChEMBL API.
 Example inchi that works, 'CBVCZFGXHXORBI-PXQQMZJSSA-N'
 
 
@@ -51,12 +54,7 @@ lookup |> filter(dtxsid != "")
 df
 
 # whole thing takes 18 min to run
-# scrap this method below
-# test2 = data.frame()
-# test2 <- rbind(test2,chemical_equal_batch(word_list = inchi_list[max(batches)+1:length(inchi_list)]))
-# test2
 
-# attach dtxsid to df, filter for those that did not return dtxsid, and send to wambaugh/tony to validate
 
 final <- left_join(df, lookup, by = (join_by(standard_inchi_key==searchValue) ))
 final2 <- final
@@ -67,10 +65,12 @@ final2$suggestions <- NULL
 write.csv(final2, "activities_with_dsstoxids.csv", row.names = FALSE)
 ```
 
+The final dataset is "activities_with_dsstoxids.csv."
+Chunks after this point are purely exploratory 
 
 
 ```{r}
-dataf <- read_csv("secondpass.csv") # this the current search through chembl
+dataf <- read_csv("activities_with_dsstoxids.csv") # this the current search through chembl
 length(unique(dataf$standard_inchi_key)) # 47,348
 
 length(unique(dataf$dtxsid)) # 2,414
